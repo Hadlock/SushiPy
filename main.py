@@ -4,11 +4,6 @@ import random
 import itertools
 import inspect
 from collections import Counter
-
-def create52Deck():
-    VALUES = "23456789TJQKA"
-    SUITS = "scdh"
-    return ["".join(card) for card in itertools.product(VALUES, SUITS)]
      
 def createSushiDeck():
     TEMPURA = "T"  * 14
