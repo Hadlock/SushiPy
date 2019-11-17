@@ -1,9 +1,30 @@
 #!/usr/bin/python3
 
+import logging
+
 import random
 import itertools
 import inspect
 from collections import Counter
+
+FN = "sushipy.log"
+logPath = "."
+logging.basicConfig(filename=FN,
+                    filemode='w',
+                    level=logging.DEBUG,
+                    format="%(levelname)s %(asctime)s %(funcName)s @%(lineno)d %(message)s")
+
+logFormatter = logging.Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s")
+rootLogger = logging.getLogger()
+
+fileHandler = logging.FileHandler("{0}/{1}".format(logPath, FN))
+fileHandler.setFormatter(logFormatter)
+rootLogger.addHandler(fileHandler)
+
+consoleHandler = logging.StreamHandler()
+consoleHandler.setFormatter(logFormatter)
+rootLogger.addHandler(consoleHandler)
+
      
 def createSushiDeck():
     TEMPURA = "T"  * 14
@@ -43,23 +64,22 @@ class SushiPlayer(object):
 
 def dealcards(players, numplayers, deck):
     for p in range(numplayers):
-        print("for p in numplayers")
+        logging.debug("for p in numplayers")
         n = SushiPlayer(0,0,0,[],[],[])
         players.append(n)
         for r in range(8): # pylint: disable=unused-variable
             card = deck.pop()
             players[p].hand.append(card)
         attrs = vars(players[p])
-        print(', '.join("%s: %s" % item for item in attrs.items()))
+        logging.debug(', '.join("%s: %s" % item for item in attrs.items()))
 
 def passcards(players):
     for p in range(len(players)):
         for c in range(len(players[p].passs)): # pylint: disable=unused-variable
             card = players[p].passs.pop()
-            print(p)
             players[p].hand.append(card)
             attrs = vars(players[p])
-            print(', '.join("%s: %s" % item for item in attrs.items()))
+            logging.debug(', '.join("%s: %s" % item for item in attrs.items()))
 
 def remove(players, card, i):
     # remove card from hand
@@ -67,7 +87,7 @@ def remove(players, card, i):
 
 def strategy0(players, deck, i):
     # the most simple strategy, play one card at random
-    print("playing strategy 0")
+    logging.info("playing strategy 0")
     # play a card
     card = players[i].hand.pop()
     players[i].played.append(card)
@@ -75,19 +95,17 @@ def strategy0(players, deck, i):
 
 def strategy1(players, deck, i):
     # try and collect nigiri
-    print("playing strategy 1")
+    logging.info("playing strategy 1")
     card = "strategy 1 placeholder"
     played = 0
     if 'W' in players[i].hand:
         # play wasabi
         if len(players[i].played) > 1:
             if players[i].played[-1] != 'W':
-                print("WASABI FOUND! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
                 card = players[i].hand[players[i].hand.index('W')]
                 players[i].played.append(card)
                 remove(players, card, i)
         elif len(players[i].played) == 0:
-            print("WASABI FOUND! ~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
             card = players[i].hand[players[i].hand.index('W')]
             players[i].played.append(card)
             remove(players, card, i)
@@ -125,7 +143,7 @@ def strategy1(players, deck, i):
 
 
     if played == 0:
-        print("no good nigiri, pick something random;")
+        logging.debug("no good nigiri, pick something random;")
         # if no nigiri or valid wasabi, grab something random
         strategy0(players, deck, i)
         played += 1
@@ -135,7 +153,8 @@ def strategy1(players, deck, i):
 
 def strategy2(players, deck, i):
     # all tempura, all the time
-    card = "strategy 2 card placeholder"
+    logging.info("playing strategy 2")
+    card = ""
     if 'T' in players[i].hand:
         card = players[i].hand[players[i].hand.index('T')]
         players[i].played.append(card)
@@ -149,7 +168,8 @@ def strategy2(players, deck, i):
 
 def strategy3(players, deck, i):
     # maki strategi m M w
-    card = "strategy 3 card placeholder"
+    logging.info("playing strategy 3")
+    card = ""
     played = 0
     if 'm' in players[i].hand:
         if played == 0:
@@ -177,7 +197,8 @@ def strategy3(players, deck, i):
 
 def strategy4(players, deck, i):
     # all sashimi, all the time
-    card = "strategy 4 card placeholder"
+    logging.info("playing strategy 4")
+    card = ""
     if 'S' in players[i].hand:
         card = players[i].hand[players[i].hand.index('S')]
         players[i].played.append(card)
@@ -191,7 +212,8 @@ def strategy4(players, deck, i):
 
 def strategy5(players, deck, i):
     # all dumplings, all the time
-    card = "strategy 5 card placeholder"
+    logging.info("playing strategy 5")
+    card = ""
     if 'D' in players[i].hand:
         card = players[i].hand[players[i].hand.index('D')]
         players[i].played.append(card)
@@ -205,7 +227,8 @@ def strategy5(players, deck, i):
 
 def strategy6(players, deck, i):
     # favor the puddin'
-    card = "strategy 6 card placeholder"
+    logging.info("playing strategy 6")
+    card = ""
     if 'P' in players[i].hand:
         card = players[i].hand[players[i].hand.index('P')]
         players[i].played.append(card)
@@ -271,7 +294,7 @@ def playround(players, deck):
     
     for p in range(len(players)):
         attrs = vars(players[p])
-        print(', '.join("%s: %s" % item for item in attrs.items()))
+        logging.debug(', '.join("%s: %s" % item for item in attrs.items()))
 
 def scoredumplings(rawscore):
     if rawscore["D"] == 5:
@@ -305,7 +328,7 @@ def scoreround(players):
     makiscore = []
     for p in range(len(players)):
         rawscore = Counter(players[p].played)
-        print(rawscore)
+        logging.debug(rawscore)
         players[p].score += scoredumplings(rawscore)
         players[p].score += scorenigiri(rawscore)
         players[p].score += scoretempura(rawscore)
@@ -317,25 +340,25 @@ def scoreround(players):
     m = max(makiscore)
     makiwinners = []
     makiwinners.append([i for i, j in enumerate(makiscore) if j == m])
-    print(makiwinners)
+    logging.debug(makiwinners)
     if len(makiscore) == 1:
         players[makiscore].score += 6    
 
 
 def finalscore(players):
     for p in range(len(players)):
-        print(players[p].score)
+        logging.info(players[p].score)
 
 def game(numplayers, deck):
     players = []
     dealcards(players, numplayers, deck)
     playround(players, deck)
     scoreround(players)
-    print("Final Scores: ")
+    logging.info("Final Scores: ")
     finalscore(players)
 
 def main():
-    print("- SushiPy!")
+    logging.info("- SushiPy!")
     deck = createSushiDeck()
     shuffleDeck(deck)
     numplayers = 4 #input("Number of Players (2-6)")
